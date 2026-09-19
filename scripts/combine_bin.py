@@ -45,10 +45,10 @@ for idx, binary in enumerate(binaries):
     if binary is not None:
         bin_length = len(binary)
         print(f"combining version {names[idx]} ({bin_length})...")
-        out_file.write(bin_length.to_bytes(4))
+        out_file.write(bin_length.to_bytes(4, byteorder="big"))
     else:
         print(f"skipping version {names[idx]}...")
-        out_file.write((0).to_bytes(4))
+        out_file.write((0).to_bytes(4, byteorder="big"))
 
 for binary in binaries:
     if binary is None:
