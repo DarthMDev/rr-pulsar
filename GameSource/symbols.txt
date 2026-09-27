@@ -608,6 +608,8 @@ GetTexMapAry__Q34nw4r3lyt8MaterialFv = 0x800809a0
 ReplaceImage__Q34nw4r3lyt6TexMapFP10TPLPaletteUi = 0x80082550
 GetFrameSize__Q34nw4r3lyt13AnimTransformFv = 0x800829d0
 __vt__Q34nw4r3lyt6Layout = 0x802734c0
+__dt__Q34nw4r3lyt6LayoutFv = 0x8007a040
+__dt__16MoviePaneHandlerFv = 0x805fb850
 
 #math
 CosFIdx__Q24nw4r4mathFf = 0x80085180
@@ -769,6 +771,7 @@ MountFromRawArchive__11ArchiveFileFPvUiPQ23EGG4Heapb = 0x80518fbc
 Dump__11ArchiveFileFPCcPQ23EGG4Heapi = 0x805190f0
 Decompress__11ArchiveFileFPCcPQ23EGG4HeapPQ33EGG7Archive8FileInfo = 0x80519508
 Unmount__11ArchiveFileFv = 0x805192cc
+GetFile__11ArchiveFileCFPCcPUi = 0x80519420
 Unmount__10ArchiveMgrFP14ArchivesHolder = 0x805411e4
 DumpArchive__14ArchivesHolderFPcPQ23EGG4Heap = 0x8052ab6c
 LoadCourseArchive__10ArchiveMgrF8CourseIdPQ23EGG4Heapb = 0x80540760
@@ -913,6 +916,9 @@ sInstance__Q24NAND7Manager = 0x809bd720
 __ct__Q25RKSYS15LicenseLdbEntryFv = 0x80544358
 __dt__Q25RKSYS15LicenseLdbEntryFv = 0x8054437c
 
+#LicenseCompletion
+IsCompleted__Q25RKSYS17LicenseCompletionCFUi = 0x8054994c
+
 #LicenseManager
 GetFavouriteCharacter__Q25RKSYS10LicenseMgrCFv = 0x805493b0
 GetFavouriteKart__Q25RKSYS10LicenseMgrCFv = 0x80549470
@@ -1044,6 +1050,7 @@ RequestDriverModel__12MenuModelMgrFUc11CharacterId = 0x8059e568
 RequestKartModel__12MenuModelMgrFUc6KartId = 0x8059e580
 RequestModel__18DriverModelControlF11CharacterId = 0x805f3494
 RequestModel__19VehicleModelControlF6KartId = 0x805f3bc4
+SetAnimationType__19VehicleModelControlF6PageId = 0x805f3b98
 RequestCharacterModel__Q25Pages13ModelRendererFUc11CharacterId = 0x805f56e0
 RequestKartModel__Q25Pages13ModelRendererFUc6KartId = 0x805f5958
 PrepareParams__Q25Pages13ModelRendererFUc = 0x805f5c94
@@ -1139,6 +1146,7 @@ CreatePageById__7SectionF6PageId = 0x80623390
 CreateSectionPages__7SectionF9SectionId = 0x8062c3a4
 AddInitialLayers__7SectionF9SectionId = 0x80630094
 GetSceneId__7SectionF9SectionId = 0x80631588
+GetSoundId__7SectionF9SectionId = 0x80631c68
 IsGameplaySection__F9SectionId = 0x808609fc
 RemoveTopLayerPage__7SectionFv = 0x80623288
 UpdateLayers__7SectionFv = 0x80623068
@@ -1599,6 +1607,16 @@ GetRuntimeTypeInfo__4PageCFv = 0x805bed68
 AfterControlUpdate__4PageFv = 0x805bf2d8
 GetControl__12ControlGroupCFUi = 0x805c2ac0
 OnActivate__4PageFv = 0x805c9888
+Load__14NumericEditBoxFUiPCcPCcPCcPCcPCcUibb = 0x805c9a7c
+RemoveAllDigits__14NumericEditBoxFv = 0x805c9f34
+ComputeSum__14NumericEditBoxFv = 0x805ca068
+AddDigit__14NumericEditBoxFUi = 0x805ca0c8
+RemoveDigit__14NumericEditBoxFv = 0x805ca250
+OnDigitClick__Q25Pages14RegisterFriendFR10PushButtonUi = 0x8061e348
+OnBackSpaceClick__Q25Pages14RegisterFriendFR10PushButtonUi = 0x8061e3b4
+__ct__Q25Pages14RegisterFriendFv = 0x8061dcb8
+__dt__Q25Pages14RegisterFriendFv = 0x8061def0
+GetRuntimeTypeInfo__Q25Pages14RegisterFriendCFv = 0x8061e804
 __ct__4PageFv = 0x8060197c
 __dt__4PageFv = 0x80601a04
 Init__4PageF6PageId = 0x80601a60
@@ -1907,12 +1925,15 @@ GetManipulatorManager__Q25Pages10KartSelectFv = 0x80846a1c
 GetActivePlayerBitfield__Q25Pages10KartSelectCFv = 0x80846a24
 AfterControlUpdate__Q25Pages10KartSelectFv = 0x80846a2c
 OnExternalButtonSelect__Q25Pages10KartSelectFR10PushButtonUi = 0x80846ea4
+GetButtonMachineById__Q25Pages10KartSelectFUc = 0x808471c4
+InitButtonMachine__Q25Pages10KartSelectFR13ButtonMachinei = 0x80847344
 BeforeEntranceAnimations__Q25Pages10KartSelectFv = 0x80847630
 BeforeExitAnimations__Q25Pages10KartSelectFv = 0x80847690
 GetPlayerBitfield__Q25Pages10KartSelectCFv = 0x80847bec
 __dt__Q25Pages10KartSelectFv = 0x80847bf4
 GetRuntimeTypeInfo__Q25Pages10KartSelectCFv = 0x80847c90
 kartsSortedByWeight = 0x808ab770
+kartUIOrderToIDArray__Q25Pages10KartSelect = 0x808ad678
 
 #MultiKartSelect
 __ct__Q25Pages15MultiKartSelectFv = 0x8062b4f4
@@ -1955,7 +1976,10 @@ OnExternalButtonSelect__Q25Pages12SinglePlayerFR10PushButtonUi = 0x8084f688
 
 #VSSettings
 __ct__Q25Pages10VSSettingsFv = 0x806284c8
+OnActivate__Q25Pages10VSSettingsFv = 0x8085354c
 OnButtonDeselect__Q25Pages10VSSettingsFR10PushButtonUi = 0x808536b0
+OnRadioClick__Q25Pages10VSSettingsFR18RadioButtonControlUiUi = 0x80853714
+OnRadioChange__Q25Pages10VSSettingsFR18RadioButtonControlUiUi = 0x8085389c
 typeInfo__Q25Pages10VSSettings = 0x809c4618
 
 ##RACEHUD
@@ -2374,6 +2398,7 @@ GetCharacterBMGId__F11CharacterIdb = 0x80833774
 GetMiiCharacterId__FRC3Mii = 0x80831af4
 GetCharacterIconPaneName__F11CharacterId = 0x80860acc
 SetButtonColours__Q223CtrlMenuCharacterSelect12ButtonDriverFUi = 0x807e4130
+ResetButtonColours__Q223CtrlMenuCharacterSelect12ButtonDriverFUi = 0x807e3efc
 OnButtonDriverSelect__Q25Pages15CharacterSelectFPQ223CtrlMenuCharacterSelect12ButtonDriverUiUc = 0x8083e5f4
 IsKartUnlocked = 0x8081cfb4
 IsKartUnlocked__F6KartIdUi = 0x8081cfb4
@@ -2564,6 +2589,7 @@ LoadKartArchive__10ArchiveMgrFUc6KartId11CharacterIdUiUiPQ23EGG4HeapPQ23EGG4Heap
 LoadKartArchiveHolder2__10ArchiveMgrFUc6KartId11CharacterIdUiUiPQ23EGG4HeapPQ23EGG4Heap = 0x80540f90
 GetKartArchivePostfix__10ArchiveMgrF11CharacterId = 0x805419c8
 LoadKartArchiveAsync__10ArchiveMgrFUc = 0x80541e44
+RequestLoadKartArchives__10ArchiveMgrFUc11CharacterIdUi = 0x80542210
 sInstance__6ScnMgr = 0x809c1850
 MenuUpdate__10SectionMgrFv = 0x8063583c
 StartSound__Q25Audio13RaceAnimActorFUi = 0x80701140

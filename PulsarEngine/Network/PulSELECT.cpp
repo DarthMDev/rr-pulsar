@@ -426,7 +426,7 @@ kmCall(0x80644414, SetCorrectTrack);
 
 // Overwrites CC rules -> 10% 100, 65% 150, 25% mirror and/or in frooms, overwritten by host setting
 static void DecideCC(ExpSELECTHandler &handler) {
-    const u8 ccSetting = Settings::Mgr::Get().GetSettingValue(Pulsar::Settings::SETTING_FROOMCC);
+    const u8 ccSetting = Settings::Mgr::Get().GetSettingValue(Settings::SETTING_FROOMCC);
     RKNet::Controller *controller = RKNet::Controller::sInstance;
     const RKNet::RoomType roomType = controller->roomType;
     u8 ccClass = 1;  // 1 100, 2 150, 3 mirror
@@ -434,7 +434,7 @@ static void DecideCC(ExpSELECTHandler &handler) {
     const bool isWorldWide = roomType == RKNet::ROOMTYPE_VS_WW || roomType == RKNet::ROOMTYPE_JOINING_WW;
     const bool force200 = isRegional && System::sInstance->IsContext(PULSAR_200_WW);
     const bool forceOtt = isRegional && System::sInstance->IsContext(PULSAR_MODE_OTT);
-    if (isRegional || isWorldWide || forceOtt || (roomType == RKNet::ROOMTYPE_FROOM_HOST && ccSetting == HOSTCC_NORMAL)) {
+    if (isRegional || isWorldWide || forceOtt) {
         Random random;
         const u32 result = random.NextLimited(100);  // 25
         System *system = System::sInstance;
@@ -447,7 +447,8 @@ static void DecideCC(ExpSELECTHandler &handler) {
     }
     if (force200)
         ccClass = 1;
-    else if (roomType == RKNet::ROOMTYPE_FROOM_HOST && ccSetting == HOSTCC_150)
+    else if (roomType == RKNet::ROOMTYPE_FROOM_HOST &&
+             (ccSetting == HOSTCC_NORMAL || ccSetting == HOSTCC_150 || ccSetting == HOSTCC_CUSTOM))
         ccClass = 2;
     else if (roomType == RKNet::ROOMTYPE_FROOM_HOST && (ccSetting == HOSTCC_500 || ccSetting == HOSTCC_100))
         ccClass = 1;

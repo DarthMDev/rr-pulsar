@@ -25,6 +25,7 @@
 namespace Pulsar {
 
 System *System::sInstance = nullptr;
+u16 System::offlineCustomEngineClass = 0;
 System::Inherit *System::inherit = nullptr;
 
 static void ApplyVanillaModeRestrictions(System *system, bool clearOttAndItemModes) {
@@ -65,6 +66,12 @@ bool System::IsVanillaMode() const {
 
     const bool isRegionalRoom = controller->roomType == RKNet::ROOMTYPE_VS_REGIONAL || controller->roomType == RKNet::ROOMTYPE_JOINING_REGIONAL || controller->roomType == RKNet::ROOMTYPE_BT_REGIONAL;
     return isRegionalRoom && (this->netMgr.region == 0x15 || this->netMgr.region == 0x0B);
+}
+
+bool System::IsOfflineVS() const {
+    const RKNet::Controller *controller = RKNet::Controller::sInstance;
+    return controller != nullptr && controller->roomType == RKNet::ROOMTYPE_NONE &&
+           Racedata::sInstance->menusScenario.settings.gamemode == MODE_VS_RACE;
 }
 
 static inline bool ShouldForceNandIoSaves() {
@@ -262,7 +269,7 @@ void System::UpdateContext() {
     const u32 sceneId = GameScene::GetCurrent()->id;
     const bool isOnlineRoomActive = controller->connectionState != RKNet::CONNECTIONSTATE_SHUTDOWN;
 
-    bool isFroom = controller->roomType == RKNet::ROOMTYPE_FROOM_HOST || controller->roomType == RKNet::ROOMTYPE_FROOM_NONHOST;
+    bool isFroom = isOnlineRoomActive && (controller->roomType == RKNet::ROOMTYPE_FROOM_HOST || controller->roomType == RKNet::ROOMTYPE_FROOM_NONHOST);
     bool isRegionalRoom = isOnlineRoomActive && (controller->roomType == RKNet::ROOMTYPE_VS_REGIONAL || controller->roomType == RKNet::ROOMTYPE_JOINING_REGIONAL || controller->roomType == RKNet::ROOMTYPE_BT_REGIONAL);
     bool isBattle = mode == MODE_BATTLE || mode == MODE_PRIVATE_BATTLE || mode == MODE_PUBLIC_BATTLE;
     bool isBalloonBattle = isBattle && racedataSettings.battleType == BATTLE_BALLOON;
@@ -286,11 +293,8 @@ void System::UpdateContext() {
     bool is200Online = settings.GetSettingValue(Pulsar::Settings::SETTING_WWMODE) == WWMODE_200 && mode == MODE_PUBLIC_VS;
     bool isLapBasedKO = settings.GetSettingValue(Pulsar::Settings::SETTING_KOENABLED) == KOSETTING_LAPBASED && isNotPublic && !isBattle && !isTimeTrial && !disableOfflineKO;
     bool isKOFinal = settings.GetSettingValue(Pulsar::Settings::SETTING_KOFINAL) == KOSETTING_FINAL_ALWAYS && !disableOfflineKO;
-    bool isCharRestrictLight = settings.GetSettingValue(Pulsar::Settings::SETTING_CHARSELECT) == CHAR_LIGHTONLY;
-    bool isCharRestrictMid = settings.GetSettingValue(Pulsar::Settings::SETTING_CHARSELECT) == CHAR_MEDIUMONLY;
-    bool isCharRestrictHeavy = settings.GetSettingValue(Pulsar::Settings::SETTING_CHARSELECT) == CHAR_HEAVYONLY;
-    bool isKartRestrictKart = settings.GetSettingValue(Pulsar::Settings::SETTING_KARTSELECT) == KART_KARTONLY;
-    bool isKartRestrictBike = settings.GetSettingValue(Pulsar::Settings::SETTING_KARTSELECT) == KART_BIKEONLY;
+    bool isCharRestrict = settings.GetSettingValue(Pulsar::Settings::SETTING_CHARSELECT) == CHARACTER_RESTRICT_ENABLED && isFroom;
+    bool isVehicleRestrict = settings.GetSettingValue(Pulsar::Settings::SETTING_KARTSELECT) == VEHICLE_RESTRICT_ENABLED && isFroom;
     bool isThunderCloud = settings.GetSettingValue(Pulsar::Settings::SETTING_THUNDERCLOUD) == THUNDERCLOUD_NORMAL && (isNotPublic || (isRegionalRoom && netMgr.region == 0x15));
     bool isItemModeRandom = settings.GetSettingValue(Pulsar::Settings::SETTING_ITEMMODE) == GAMEMODE_RANDOM && isNotPublic;
     bool isItemModeBlast = settings.GetSettingValue(Pulsar::Settings::SETTING_ITEMMODE) == GAMEMODE_BLAST && isNotPublic;
@@ -307,6 +311,7 @@ void System::UpdateContext() {
     bool isTransmissionVanilla = settings.GetSettingValue(Pulsar::Settings::SETTING_FORCETRANSMISSION) == FORCE_TRANSMISSION_VANILLA && (isFroom || (isRegionalRoom && netMgr.region == 0x15));
     bool isAllItemsCanLand = settings.GetSettingValue(Pulsar::Settings::SETTING_ALLITEMSCANLAND) == ALLITEMSCANLAND_ENABLED;
     bool isVanillaMode = settings.GetSettingValue(Pulsar::Settings::SETTING_VANILLAMODE) == VANILLAMODE_ENABLED && isFroom;
+    bool isMirrorMode = settings.GetSettingValue(Pulsar::Settings::SETTING_MIRROR) == MIRRORMODE_ENABLED && isFroom;
     bool isTeamBattle = settings.GetSettingValue(Pulsar::Settings::SETTING_BATTLETEAMS) == BATTLE_FFA_DISABLED && isBattle;
     bool isElimination = settings.GetSettingValue(Pulsar::Settings::SETTING_BATTLEELIMINATION) && isBalloonBattle;
     bool isVR = settings.GetSettingValue(Pulsar::Settings::SETTING_VR) == VR_ENABLED && isNotPublic;
@@ -341,11 +346,8 @@ void System::UpdateContext() {
                 newContext = netMgr.hostContext;
                 newContext2 = netMgr.hostContext2;
                 isKOFinal = newContext & (1 << PULSAR_KOFINAL);
-                isCharRestrictLight = newContext & (1 << PULSAR_CHARRESTRICTLIGHT);
-                isCharRestrictMid = newContext & (1 << PULSAR_CHARRESTRICTMID);
-                isCharRestrictHeavy = newContext & (1 << PULSAR_CHARRESTRICTHEAVY);
-                isKartRestrictKart = newContext & (1 << PULSAR_KARTRESTRICT);
-                isKartRestrictBike = newContext & (1 << PULSAR_BIKERESTRICT);
+                isCharRestrict = newContext & (1 << PULSAR_CHARRESTRICT);
+                isVehicleRestrict = newContext & (1 << PULSAR_VEHICLERESTRICT);
                 isItemModeRandom = newContext2 & (1 << PULSAR_ITEMMODERANDOM);
                 isItemModeBlast = newContext2 & (1 << PULSAR_ITEMMODEBLAST);
                 isItemModeRain = newContext2 & (1 << PULSAR_ITEMMODERAIN);
@@ -386,6 +388,7 @@ void System::UpdateContext() {
                 isKoRoyaleLaps1_5x = newContext2 & (1 << PULSAR_KOROYALE_LAPS_1_5X);
                 isKoRoyaleLaps2_0x = newContext2 & (1 << PULSAR_KOROYALE_LAPS_2_0X);
                 isVanillaMode = newContext2 & (1 << PULSAR_VANILLAMODE);
+                isMirrorMode = newContext2 & (1 << PULSAR_MIRRORMODE);
                 if (isOTT) {
                     isUMTs = newContext & (1 << PULSAR_UMTS);
                     isFeather &= newContext & (1 << PULSAR_FEATHER);
@@ -408,6 +411,7 @@ void System::UpdateContext() {
 
     if (isFroom && controller->roomType == RKNet::ROOMTYPE_FROOM_HOST) {
         isVanillaMode = settings.GetSettingValue(Pulsar::Settings::SETTING_VANILLAMODE) == VANILLAMODE_ENABLED;
+        isMirrorMode = settings.GetSettingValue(Pulsar::Settings::SETTING_MIRROR) == MIRRORMODE_ENABLED;
     }
 
     if (isVanillaMode && isFroom) {
@@ -435,9 +439,8 @@ void System::UpdateContext() {
         newContextValue |= (is200) << PULSAR_200 | (isFeather) << PULSAR_FEATHER |
                            (isUMTs) << PULSAR_UMTS | (is500) << PULSAR_500 |
                            (isOTT) << PULSAR_MODE_OTT | (isKO) << PULSAR_MODE_KO |
-                           (isCharRestrictLight) << PULSAR_CHARRESTRICTLIGHT | (isCharRestrictMid) << PULSAR_CHARRESTRICTMID |
-                           (isCharRestrictHeavy) << PULSAR_CHARRESTRICTHEAVY | (isKartRestrictKart) << PULSAR_KARTRESTRICT |
-                           (isKartRestrictBike) << PULSAR_BIKERESTRICT | (isChangeCombo) << PULSAR_CHANGECOMBO |
+                           (isCharRestrict) << PULSAR_CHARRESTRICT | (isVehicleRestrict) << PULSAR_VEHICLERESTRICT |
+                           (isChangeCombo) << PULSAR_CHANGECOMBO |
                            (isTrackSelectionRegs) << PULSAR_REGS | (isKOFinal) << PULSAR_KOFINAL |
                            (isExtendedTeams) << PULSAR_EXTENDEDTEAMS | (isTrackSelectionRetros) << PULSAR_RETROS |
                            (isTrackSelectionCts) << PULSAR_CTS | (isTeamBattle) << PULSAR_FFA |
@@ -460,7 +463,8 @@ void System::UpdateContext() {
                             (isKoPerRace4) << PULSAR_KOPERRACE_4 |
                             (isKoRoyaleLaps1_5x) << PULSAR_KOROYALE_LAPS_1_5X |
                             (isKoRoyaleLaps2_0x) << PULSAR_KOROYALE_LAPS_2_0X |
-                            (isVanillaMode) << PULSAR_VANILLAMODE;
+                            (isVanillaMode) << PULSAR_VANILLAMODE |
+                            (isMirrorMode) << PULSAR_MIRRORMODE;
     }
 
     // Combine the new context with preserved bits

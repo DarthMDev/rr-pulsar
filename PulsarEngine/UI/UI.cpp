@@ -32,7 +32,9 @@
 #include <Gamemodes/KO/KOWinnerPage.hpp>
 #include <Settings/UI/SettingsPanel.hpp>
 #include <Settings/UI/SettingsPageSelect.hpp>
+#include <Settings/UI/CustomEngineClassPage.hpp>
 #include <Settings/UI/RegionPage.hpp>
+#include <Settings/UI/RestrictionPages.hpp>
 #include <UI/SelectStage/VariantSelect.hpp>
 #include <UI/TransmissionSelect/TransmissionSelect.hpp>
 #include <UI/VRLeaderboard/VRLeaderboard.hpp>
@@ -59,6 +61,17 @@ void ExpSection::CreatePages(ExpSection &self, SectionId id) {
     self.CreatePulPages();
 }
 kmCall(0x80622088, ExpSection::CreatePages);
+
+typedef void *(*ArrayDestructor)(void *, int);
+extern "C" void __destroy_new_array(void *array, ArrayDestructor destructor);
+extern "C" void *__dt__16MoviePaneHandlerFv(void *handler, int shouldDelete);
+static void DestroyMainLayout(nw4r::lyt::Layout *layout, s32) {
+    MainLayout *mainLayout = reinterpret_cast<MainLayout *>(reinterpret_cast<u8 *>(layout) - 4);
+    __destroy_new_array(mainLayout->moviePaneHandlerArray, __dt__16MoviePaneHandlerFv);
+    mainLayout->moviePaneHandlerArray = nullptr;
+    layout->~Layout();
+}
+kmCall(0x805e86c4, DestroyMainLayout);
 
 void ExpSection::CreatePulPages() {
     const System *system = System::sInstance;
@@ -159,9 +172,26 @@ void ExpSection::CreatePulPages() {
         this->CreateAndInitPage(*this, RoomKickPage::id);
         this->CreateAndInitPage(*this, PULPAGE_TEAMSELECT);
         this->CreateAndInitPage(*this, PULPAGE_EXTENDEDTEAMSELECT);
+        this->CreateAndInitPage(*this, CustomEngineClassPage::id);
+    }
+    // The section is created before the offline VS gamemode is necessarily written to
+    // menusScenario. Create the keyboard whenever this section owns VSSettings, then
+    // let the VSSettings hooks decide at runtime whether the Custom option is active.
+    if (this->Get<Pages::VSSettings>() != nullptr && this->GetPulPage<CustomEngineClassPage>() == nullptr) {
+        this->CreateAndInitPage(*this, CustomEngineClassPage::id);
     }
     if (this->Get<Pages::DriftSelect>() != nullptr) {
         this->CreateAndInitPage(*this, TransmissionSelect::id);
+    }
+
+    const bool canOpenRestrictionSettings = this->Get<ExpFroom>() != nullptr || this->sectionId == SECTION_P1_WIFI || this->sectionId == SECTION_P1_WIFI_FROM_FROOM_RACE || this->sectionId == SECTION_P1_WIFI_FROM_FIND_FRIEND || this->sectionId == SECTION_P2_WIFI || this->sectionId == SECTION_P2_WIFI_FROM_FROOM_RACE;
+    if (canOpenRestrictionSettings && this->GetPulPage<SettingsPanel>() != nullptr) {
+        if (this->GetPulPage<CharacterRestrictionPage>() == nullptr)
+            this->CreateAndInitPage(*this, CharacterRestrictionPage::id);
+        if (this->GetPulPage<VehicleRestrictionWeightPage>() == nullptr)
+            this->CreateAndInitPage(*this, VehicleRestrictionWeightPage::id);
+        if (this->GetPulPage<VehicleRestrictionPage>() == nullptr)
+            this->CreateAndInitPage(*this, VehicleRestrictionPage::id);
     }
 }
 
@@ -247,8 +277,20 @@ void ExpSection::CreateAndInitPage(ExpSection &self, u32 id) {
         case SettingsPageSelect::id:
             page = new SettingsPageSelect;
             break;
+        case CustomEngineClassPage::id:
+            page = new CustomEngineClassPage;
+            break;
         case RegionPage::id:
             page = new RegionPage;
+            break;
+        case CharacterRestrictionPage::id:
+            page = new CharacterRestrictionPage;
+            break;
+        case VehicleRestrictionWeightPage::id:
+            page = new VehicleRestrictionWeightPage;
+            break;
+        case VehicleRestrictionPage::id:
+            page = new VehicleRestrictionPage;
             break;
         case PULPAGE_BADGESELECT:
             page = new SettingsPageSelect(true);
@@ -281,7 +323,14 @@ void ExpSection::CreateAndInitPage(ExpSection &self, u32 id) {
         self.Set(page, initId);
     else
         self.SetPulPage(page, static_cast<PulPageId>(id));
+
+    Page *characterSelect = nullptr;
+    if (id == CharacterRestrictionPage::id) {
+        characterSelect = self.pages[PAGE_CHARACTER_SELECT];
+        self.pages[PAGE_CHARACTER_SELECT] = page;
+    }
     page->Init(initId);
+    if (id == CharacterRestrictionPage::id) self.pages[PAGE_CHARACTER_SELECT] = characterSelect;
 }
 kmBranch(0x80622d08, ExpSection::CreateAndInitPage);
 
@@ -415,25 +464,97 @@ static const BMGHolder *GetCharaNameBmg() {
     return &charaNameBmg;
 }
 
+static const BMGHolder *GetCharaRRBmg() {
+    static BMGHolder charaRRBmg;
+    static const void *loadedFile = nullptr;
+
+    ArchiveMgr *archiveMgr = ArchiveMgr::sInstance;
+    if (archiveMgr == nullptr) return nullptr;
+
+    void *file = archiveMgr->GetFile(ARCHIVE_HOLDER_UI, "message/CharaRR.bmg", nullptr);
+    if (file == nullptr) {
+        loadedFile = nullptr;
+        charaRRBmg.bmgFile = nullptr;
+        return nullptr;
+    }
+
+    if (file != loadedFile) {
+        charaRRBmg.Init(*reinterpret_cast<const BMGHeader *>(file));
+        loadedFile = file;
+    }
+    return &charaRRBmg;
+}
+
+static const BMGHolder *GetCreditsBMG() {
+    static BMGHolder creditsBmg;
+    static const void *loadedFile = nullptr;
+
+    ArchiveMgr *archiveMgr = ArchiveMgr::sInstance;
+    if (archiveMgr == nullptr) return nullptr;
+
+    void *file = archiveMgr->GetFile(ARCHIVE_HOLDER_UI, "message/Credits.bmg", nullptr);
+    if (file == nullptr) {
+        loadedFile = nullptr;
+        creditsBmg.bmgFile = nullptr;
+        return nullptr;
+    }
+
+    if (file != loadedFile) {
+        creditsBmg.Init(*reinterpret_cast<const BMGHeader *>(file));
+        loadedFile = file;
+    }
+    return &creditsBmg;
+}
+
+static const BMGHolder *GetCommonBmg() {
+    static BMGHolder commonBmg;
+    static const void *loadedFile = nullptr;
+    static const void *loadedArchive = nullptr;
+
+    ArchiveMgr *archiveMgr = ArchiveMgr::sInstance;
+    if (archiveMgr == nullptr) return nullptr;
+
+    ArchivesHolder *uiHolder = archiveMgr->archivesHolders[ARCHIVE_HOLDER_UI];
+    if (uiHolder == nullptr) return nullptr;
+
+    //  If custom assets archive is already mounted and unchanged, return cached BMGHolder
+    if (uiHolder->archiveCount > 3) {
+        const ArchiveFile &assetsFile = uiHolder->archives[3];
+        if (assetsFile.archive != nullptr && assetsFile.archive == loadedArchive && loadedFile != nullptr) {
+            return &commonBmg;
+        }
+    }
+
+    const void *currentArchive = nullptr;
+    void *file = nullptr;
+
+    for (int i = static_cast<int>(uiHolder->archiveCount) - 1; i >= 0; --i) {
+        file = uiHolder->archives[i].GetFile("message/Common.bmg", nullptr);
+        if (file != nullptr) {
+            currentArchive = uiHolder->archives[i].archive;
+            break;
+        }
+    }
+    if (file == nullptr) {
+        file = archiveMgr->GetFile(ARCHIVE_HOLDER_UI, "message/Common.bmg", nullptr);
+    }
+    if (file == nullptr) {
+        loadedFile = nullptr;
+        loadedArchive = nullptr;
+        commonBmg.bmgFile = nullptr;
+        return nullptr;
+    }
+
+    if (file != loadedFile || currentArchive != loadedArchive) {
+        commonBmg.Init(*reinterpret_cast<const BMGHeader *>(file));
+        loadedFile = file;
+        loadedArchive = currentArchive;
+    }
+    return &commonBmg;
+}
+
 static int GetMsgIdxById(const BMGHolder &normalHolder, s32 bmgId) {
-    int ret = GetMsgIdxByBmgId(System::sInstance->GetBMG(), bmgId);
-    if (ret >= 0) {
-        isCustom = CUSTOM_BMG;
-        matchedCustomBmg = &System::sInstance->GetBMG();
-        return ret;
-    }
-    ret = GetMsgIdxByBmgId(System::sInstance->GetBMGCT(), bmgId);
-    if (ret >= 0) {
-        isCustom = CUSTOM_BMG;
-        matchedCustomBmg = &System::sInstance->GetBMGCT();
-        return ret;
-    }
-    ret = GetMsgIdxByBmgId(System::sInstance->GetBMGBT(), bmgId);
-    if (ret >= 0) {
-        isCustom = CUSTOM_BMG;
-        matchedCustomBmg = &System::sInstance->GetBMGBT();
-        return ret;
-    }
+    int ret;
     const BMGHolder *countryBmg = GetCountryBmg();
     if (countryBmg != nullptr) {
         ret = GetMsgIdxByBmgId(*countryBmg, bmgId);
@@ -452,10 +573,57 @@ static int GetMsgIdxById(const BMGHolder &normalHolder, s32 bmgId) {
             return ret;
         }
     }
+    const BMGHolder *charaRRBmg = GetCharaRRBmg();
+    if (charaRRBmg != nullptr) {
+        ret = GetMsgIdxByBmgId(*charaRRBmg, bmgId);
+        if (ret >= 0) {
+            isCustom = CUSTOM_BMG;
+            matchedCustomBmg = charaRRBmg;
+            return ret;
+        }
+    }
+    const BMGHolder *creditsBmg = GetCreditsBMG();
+    if (creditsBmg != nullptr) {
+        ret = GetMsgIdxByBmgId(*creditsBmg, bmgId);
+        if (ret >= 0) {
+            isCustom = CUSTOM_BMG;
+            matchedCustomBmg = creditsBmg;
+            return ret;
+        }
+    }
+    const BMGHolder *commonBmg = GetCommonBmg();
+    if (commonBmg != nullptr) {
+        ret = GetMsgIdxByBmgId(*commonBmg, bmgId);
+        if (ret >= 0) {
+            isCustom = CUSTOM_BMG;
+            matchedCustomBmg = commonBmg;
+            return ret;
+        }
+    }
     isCustom = BMG_NORMAL;
     matchedCustomBmg = nullptr;
     ret = GetMsgIdxByBmgId(normalHolder, bmgId);
-    return ret;
+    if (ret >= 0) return ret;
+
+    ret = GetMsgIdxByBmgId(System::sInstance->GetBMG(), bmgId);
+    if (ret >= 0) {
+        isCustom = CUSTOM_BMG;
+        matchedCustomBmg = &System::sInstance->GetBMG();
+        return ret;
+    }
+    ret = GetMsgIdxByBmgId(System::sInstance->GetBMGCT(), bmgId);
+    if (ret >= 0) {
+        isCustom = CUSTOM_BMG;
+        matchedCustomBmg = &System::sInstance->GetBMGCT();
+        return ret;
+    }
+    ret = GetMsgIdxByBmgId(System::sInstance->GetBMGBT(), bmgId);
+    if (ret >= 0) {
+        isCustom = CUSTOM_BMG;
+        matchedCustomBmg = &System::sInstance->GetBMGBT();
+        return ret;
+    }
+    return -1;
 }
 kmBranch(0x805f8c88, GetMsgIdxById);
 

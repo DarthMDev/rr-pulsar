@@ -11,6 +11,7 @@
 #include <MarioKartWii/UI/Page/Other/VR.hpp>
 #include <MarioKartWii/UI/Page/Other/Votes.hpp>
 #include <MarioKartWii/UI/Page/Other/WifiVSResults.hpp>
+#include <MarioKartWii/UI/Section/Section.hpp>
 #include <MarioKartWii/UI/Ctrl/CtrlRace/CtrlRace2DMap.hpp>
 #include <MarioKartWii/UI/Ctrl/CtrlRace/CtrlRaceBalloon.hpp>
 #include <MarioKartWii/UI/Ctrl/CtrlRace/CtrlRaceRankNum.hpp>
@@ -31,6 +32,14 @@ void Racedata_InitRace(Racedata *racedata) {
         racedata->racesScenario.settings.modeFlags &= ~1;
         racedata->racesScenario.settings.engineClass = CC_100;
     }
+    const bool isFroom = controller != nullptr &&
+                         (controller->roomType == RKNet::ROOMTYPE_FROOM_HOST ||
+                          controller->roomType == RKNet::ROOMTYPE_FROOM_NONHOST);
+    const GameMode mode = racedata->racesScenario.settings.gamemode;
+    const bool isBattle = mode == MODE_BATTLE || mode == MODE_PRIVATE_BATTLE || mode == MODE_PUBLIC_BATTLE;
+    if (isFroom && !isBattle && System::sInstance->IsContext(PULSAR_MIRRORMODE)) {
+        racedata->racesScenario.settings.modeFlags |= 1;
+    }
     if (settings.gamemode == MODE_VS_RACE && (settings.modeFlags & ExtendedTeamManager::TEAM_MODE_FLAG) && ExtendedTeamManager::IsActivated()) {
         ExtendedTeamManager::sInstance->ConfigureOfflineTeams();
         racedata->racesScenario.settings.modeFlags &= ~ExtendedTeamManager::TEAM_MODE_FLAG;
@@ -46,6 +55,17 @@ static bool IsExtendedTeamVSSelected() {
     const RacedataSettings &settings = Racedata::sInstance->menusScenario.settings;
     return settings.gamemode == MODE_VS_RACE && (settings.modeFlags & ExtendedTeamManager::TEAM_MODE_FLAG);
 }
+
+u32 RaceMenuPage_GetSectionSoundId(SectionId sectionId) {
+    const RacedataSettings &settings = Racedata::sInstance->menusScenario.settings;
+    const RKNet::Controller *controller = RKNet::Controller::sInstance;
+    if (sectionId == SECTION_VS_RACE_AWARD && controller->roomType == RKNet::ROOMTYPE_NONE && (settings.modeFlags & ExtendedTeamManager::TEAM_MODE_FLAG)) {
+        sectionId = SECTION_MAIN_MENU_FROM_MENU;
+        SectionMgr::sInstance->nextSectionId = sectionId;
+    }
+    return Section::GetSoundId(sectionId);
+}
+kmCall(0x8085b00c, RaceMenuPage_GetSectionSoundId);
 
 kmRuntimeUse(0x8084ffc8);
 void VSTeamsView_AssignTeams(Pages::Menu *_this) {

@@ -51,6 +51,7 @@ enum {
     CHARACTER_COUNT = 0x30,
     CUSTOM_CHARACTER_NAME_BMG_START = UI::BMG_CUSTOM_CHARACTER_NAME_START,
     CUSTOM_CHARACTER_AUTHOR_BMG_START = UI::BMG_CUSTOM_CHARACTER_AUTHOR_START,
+    CUSTOM_CHARACTER_IMAGE_BMG_START = UI::BMG_CUSTOM_CHARACTER_IMAGE_START,
     MENU_DRIVER_MODEL_COUNT = 0x18,
     LOCAL_PLAYER_COUNT = 4,
     ONLINE_PLAYER_COUNT = 12,
@@ -129,6 +130,7 @@ void UpdateCharacterSelectText(u8 hud);
 // Heap and loose asset loading helpers.
 void SyncRawCachesToCurrentScene();
 u8 ResolveMenuTable(CharacterId character);
+bool RequestLoadKartArchivesImmediate(ArchiveMgr *archiveMgr, u8 hudSlotId, CharacterId character, u32 gamemode);
 bool BuildDriverPath(CharacterId character, u8 table, char *path, u32 pathSize);
 bool DiscFileSize(const char *path, u32 &size);
 void *LoadFileToMainRAM(const char *path, EGG::Heap *heap, EGG::DvdRipper::EAllocDirection allocDirection, u32 *outSize);

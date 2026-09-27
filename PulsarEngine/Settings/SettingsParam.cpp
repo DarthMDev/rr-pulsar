@@ -32,8 +32,8 @@ const SettingDef Params::settingDefs[SETTING_COUNT] = {
     {SETTING_BATTLETEAMS, 2},
     {SETTING_BATTLEELIMINATION, 2},
     {SETTING_FROOMCC, 4},
-    {SETTING_KARTSELECT, 3},
-    {SETTING_CHARSELECT, 4},
+    {SETTING_KARTSELECT, 2},
+    {SETTING_CHARSELECT, 2},
     {SETTING_RANKINGS, 2},
     {SETTING_VR, 2},
     {SETTING_RACECOUNT, 7},
@@ -65,7 +65,9 @@ const SettingDef Params::settingDefs[SETTING_COUNT] = {
     {SETTING_EXTENDEDTEAMSLINE, 2},
     {SETTING_EXTENDEDTEAMSPLAYERS, 4},
     {SETTING_LOOSEARCHIVEOVERRIDES, 2},
-    {SETTING_LANGUAGE, 13}};
+    {SETTING_LANGUAGE, 13},
+    {SETTING_LIGHTNINGFLASH, 2},
+    {SETTING_MIRROR, 2}};
 
 static const SettingId race1RadioSettings[] = {
     SETTING_BRAKEDRIFT,
@@ -82,6 +84,7 @@ static const SettingId race2RadioSettings[] = {
     SETTING_BLOOM,
     SETTING_FOV,
     SETTING_NAMETAG,
+    SETTING_LIGHTNINGFLASH,
     SETTING_ITEMBOXRESPAWN,
     SETTING_ALLITEMSCANLAND};
 
@@ -135,7 +138,8 @@ static const SettingId froom2Radios[] = {
     SETTING_THUNDERCLOUD,
     SETTING_FORCETRANSMISSION,
     SETTING_ALLITEMSCANLAND,
-    SETTING_VANILLAMODE};
+    SETTING_VANILLAMODE,
+    SETTING_MIRROR};
 
 static const SettingId ottOfflineRadios[] = {
     SETTING_OTTOFFLINE,
@@ -207,7 +211,7 @@ enum PageBmg {
 
 const SettingsPageDef Params::pageDefs[SETTINGS_PAGE_COUNT] = {
     RADIO_PAGE_COUNT(PAGE_RACE1_BMG, race1RadioSettings, 5),
-    RADIO_PAGE_COUNT(PAGE_RACE2_BMG, race2RadioSettings, 5),
+    RADIO_PAGE_COUNT(PAGE_RACE2_BMG, race2RadioSettings, 6),
     PAGE(PAGE_MENU_BMG, menuRadios, menuScrollers),
     RADIO_PAGE(PAGE_SOUND_BMG, soundRadios),
     RADIO_PAGE(PAGE_ONLINE_BMG, onlineRadios),

@@ -1,5 +1,7 @@
 #include <Settings/UI/SettingsPanel.hpp>
 #include <Settings/UI/SettingsPageSelect.hpp>
+#include <Settings/UI/CustomEngineClassPage.hpp>
+#include <Settings/UI/RestrictionPages.hpp>
 #include <Settings/Settings.hpp>
 #include <UI/ChangeCombo/ChangeCombo.hpp>
 #include <SlotExpansion/CupsConfig.hpp>
@@ -14,6 +16,18 @@ static bool s_votingSettingsPreviewActive = false;
 static u32 s_votingSettingsPreviewFrame = 0;
 static const u32 votingSettingsPreviewDuration = 240;
 static u8 s_hostPreviewValues[Settings::SETTING_COUNT];
+
+static u8 GetFroomCCSettingValue(u8 option) {
+    static const u8 values[] = {HOSTCC_150, HOSTCC_100, HOSTCC_500, HOSTCC_CUSTOM};
+    return option < 4 ? values[option] : HOSTCC_150;
+}
+
+static u8 GetFroomCCOption(u8 settingValue) {
+    for (u8 option = 0; option < 4; ++option) {
+        if (GetFroomCCSettingValue(option) == settingValue) return option;
+    }
+    return 0;
+}
 
 static bool IsVotingSection(SectionId id) {
     return (id >= SECTION_P1_WIFI_FROOM_VS_VOTING && id <= SECTION_P2_WIFI_FROOM_COIN_VOTING) ||
@@ -131,7 +145,7 @@ void SettingsPanel::ApplyVotingPreviewHostSettings() {
             const Settings::SettingDef &setting = Settings::Params::GetSettingDef(id);
             const u8 value = netMgr.hostSettingsPreview[offset++];
             s_hostPreviewValues[Settings::Params::GetSettingIndex(id)] =
-                value < setting.optionCount ? value : 0;
+                value < setting.optionCount || (id == Settings::SETTING_FROOMCC && value == HOSTCC_CUSTOM) ? value : 0;
         }
         for (u32 i = 0; i < def.scrollerCount && offset < Network::HOST_SETTINGS_PREVIEW_COUNT; ++i) {
             const Settings::SettingId id = def.scrollerSettings[i];
@@ -203,9 +217,10 @@ void SettingsPanel::LoadCurrentValues() {
     const Settings::Mgr &mgr = Settings::Mgr::Get();
     for (u32 i = 0; i < page.radioCount; ++i) {
         const Settings::SettingId id = page.radioSettings[i];
-        radioValues[i] = s_votingSettingsPreviewActive
+        const u8 value = s_votingSettingsPreviewActive
                              ? s_hostPreviewValues[Settings::Params::GetSettingIndex(id)]
                              : mgr.GetSettingValue(id);
+        radioValues[i] = id == Settings::SETTING_FROOMCC ? GetFroomCCOption(value) : value;
     }
     for (u32 i = 0; i < page.scrollerCount; ++i) {
         const Settings::SettingId id = page.scrollerSettings[i];
@@ -286,6 +301,36 @@ void SettingsPanel::OnActivate() {
     }
 }
 
+void SettingsPanel::OnResume() {
+    MenuInteractable::OnResume();
+    SetControlsHidden(false);
+}
+
+void SettingsPanel::SetControlsHidden(bool hidden) {
+    const Settings::SettingsPageDef &page = Settings::Params::GetPageDef(settingsPageId);
+    const bool controlsHidden = hidden || s_votingSettingsPreviewActive;
+
+    titleText->isHidden = hidden;
+    bottomText->isHidden = hidden;
+    externControls[0]->isHidden = controlsHidden;
+    externControls[0]->manipulator.inaccessible = controlsHidden;
+    backButton.isHidden = controlsHidden;
+    backButton.manipulator.inaccessible = controlsHidden;
+    controlsManipulatorManager.inaccessible = controlsHidden;
+
+    for (u32 i = 0; i < Settings::Params::maxRadioCount; ++i) {
+        const bool rowHidden = hidden || i >= page.radioCount;
+        radioButtonControls[i].isHidden = rowHidden;
+        radioButtonControls[i].manipulator.inaccessible = rowHidden || s_votingSettingsPreviewActive;
+    }
+    for (u32 i = 0; i < Settings::Params::maxScrollerCount; ++i) {
+        const bool rowHidden = hidden || i >= page.scrollerCount;
+        upDownControls[i].isHidden = rowHidden;
+        upDownControls[i].manipulator.inaccessible = rowHidden || s_votingSettingsPreviewActive;
+        textUpDown[i].isHidden = rowHidden;
+    }
+}
+
 const ut::detail::RuntimeTypeInfo *SettingsPanel::GetRuntimeTypeInfo() const { return Pages::VSSettings::typeInfo; }
 void SettingsPanel::OnExternalButtonSelect(PushButton &, u32) { bottomText->SetMessage(BMG_SETTINGS_BOTTOM); }
 int SettingsPanel::GetActivePlayerBitfield() const { return activePlayerBitfield; }
@@ -307,7 +352,11 @@ void SettingsPanel::SaveSettings(bool) {
     if (s_votingSettingsPreviewActive) return;
     const Settings::SettingsPageDef &page = Settings::Params::GetPageDef(settingsPageId);
     Settings::Mgr *mgr = Settings::Mgr::sInstance;
-    for (u32 i = 0; i < page.radioCount; ++i) mgr->SetSettingValue(page.radioSettings[i], radioValues[i]);
+    for (u32 i = 0; i < page.radioCount; ++i) {
+        const Settings::SettingId id = page.radioSettings[i];
+        const u8 value = id == Settings::SETTING_FROOMCC ? GetFroomCCSettingValue(radioValues[i]) : radioValues[i];
+        mgr->SetSettingValue(id, value);
+    }
     for (u32 i = 0; i < page.scrollerCount; ++i) mgr->SetSettingValue(page.scrollerSettings[i], scrollerValues[i]);
     mgr->Update();
 }
@@ -351,6 +400,28 @@ void SettingsPanel::OnRadioButtonClick(RadioButtonControl &radio, u32, u32 optio
     const Settings::SettingsPageDef &page = Settings::Params::GetPageDef(settingsPageId);
     if (radio.id >= page.radioCount) return;
     radioValues[radio.id] = optionId;
+    const Settings::SettingId settingId = page.radioSettings[radio.id];
+    if (settingId == Settings::SETTING_FROOMCC && optionId == 3) {
+        ExpSection *section = ExpSection::GetSection();
+        if (section != nullptr && section->GetPulPage<CustomEngineClassPage>() != nullptr) {
+            nextPageId = static_cast<PageId>(CustomEngineClassPage::id);
+            EndStateAnimated(0, 0.0f);
+        }
+    } else if (settingId == Settings::SETTING_CHARSELECT && optionId == CHARACTER_RESTRICT_ENABLED) {
+        ExpSection *section = ExpSection::GetSection();
+        if (section != nullptr && section->GetPulPage<CharacterRestrictionPage>() != nullptr) {
+            SaveSettings(true);
+            nextPageId = static_cast<PageId>(CharacterRestrictionPage::id);
+            EndStateAnimated(0, 0.0f);
+        }
+    } else if (settingId == Settings::SETTING_KARTSELECT && optionId == VEHICLE_RESTRICT_ENABLED) {
+        ExpSection *section = ExpSection::GetSection();
+        if (section != nullptr && section->GetPulPage<VehicleRestrictionWeightPage>() != nullptr) {
+            SaveSettings(true);
+            nextPageId = static_cast<PageId>(VehicleRestrictionWeightPage::id);
+            EndStateAnimated(0, 0.0f);
+        }
+    }
 }
 
 void SettingsPanel::OnRadioButtonChange(RadioButtonControl &radio, u32, u32 optionId) {

@@ -85,7 +85,10 @@ struct PulROOM : public RKNet::ROOMPacket {
     u8 curBlockingArrayIdx;  // Current write index in circular buffer
     bool lastGroupedTrackPlayed;  // Whether most recent track was a grouped track
     u16 blockedTracks[12];  // PulsarId array (up to MAX_TRACK_BLOCKING tracks)
+    u16 customEngineClass;  // 0 when the Custom engine class option is not active
     u8 hostSettingsPreview[HOST_SETTINGS_PREVIEW_COUNT];
+    u32 characterRestrictionMask;
+    u16 vehicleRestrictionMasks[Restrictions::VEHICLE_WEIGHT_COUNT];
 
     // Anti-cheat verification tag - proves sender has correct encryption key
     u32 acVerifyTag;

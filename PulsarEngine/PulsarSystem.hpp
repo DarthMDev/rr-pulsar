@@ -37,11 +37,8 @@ enum Context {
     PULSAR_MODE_OTT,
     PULSAR_MODE_KO,
     PULSAR_MODE_LAPKO,
-    PULSAR_CHARRESTRICTLIGHT,
-    PULSAR_CHARRESTRICTMID,
-    PULSAR_CHARRESTRICTHEAVY,
-    PULSAR_KARTRESTRICT,
-    PULSAR_BIKERESTRICT,
+    PULSAR_CHARRESTRICT,
+    PULSAR_VEHICLERESTRICT,
     PULSAR_500,
     PULSAR_THUNDERCLOUD,
     PULSAR_REGS,
@@ -81,7 +78,8 @@ enum Context2 {
     PULSAR_KOPERRACE_4,
     PULSAR_VANILLAMODE,
     PULSAR_KOROYALE_LAPS_1_5X,
-    PULSAR_KOROYALE_LAPS_2_0X
+    PULSAR_KOROYALE_LAPS_2_0X,
+    PULSAR_MIRRORMODE
 };
 
 class System {
@@ -106,6 +104,7 @@ protected:
 
 public:
     static System *sInstance;
+    static u16 offlineCustomEngineClass;
 
     virtual void SetUserInfo(Network::ResvInfo::UserInfo &userInfo) {};
     virtual bool CheckUserInfo(const Network::ResvInfo::UserInfo &userInfo) { return true; };
@@ -114,6 +113,7 @@ public:
     bool IsContext(Context context) const { return (this->context & (1 << context)) != 0; }
     bool IsContext(Context2 context2) const { return (this->context2 & (1 << context2)) != 0; }
     bool IsVanillaMode() const;
+    bool IsOfflineVS() const;
     static s32 OnSceneEnter(Random &random);
 
     const char *GetModFolder() const { return modFolderName; }
