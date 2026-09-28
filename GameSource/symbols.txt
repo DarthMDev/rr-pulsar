@@ -1758,6 +1758,7 @@ OnModeButtonSelect__Q25Pages13WFCModeSelectFR10PushButtonUi = 0x8064c75c
 OnModeButtonClick__Q25Pages13WFCModeSelectFR10PushButtonUi = 0x8064c610
 
 #WFCFriendsMenu
+Load__18FriendStatusButtonFPCcPCcPCc = 0x8064b354
 __ct__Q25Pages14WFCFriendsMenuFv = 0x8064c7c8
 __dt__Q25Pages14WFCFriendsMenuFv = 0x8064c9d8
 OnInit__Q25Pages14WFCFriendsMenuFv = 0x8064ca98

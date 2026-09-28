@@ -5,8 +5,6 @@
 namespace Pulsar {
 namespace UI {
 
-kmWrite32(0x8064cac8, 0x60000000);  // nop InitControlGroup in WFCFriendsMenu::OnInit
-
 ExpWFCFriendsMenu::ExpWFCFriendsMenu() {
     this->onRecentPlayersClick.subject = this;
     this->onRecentPlayersClick.ptmf = &ExpWFCFriendsMenu::OnRecentPlayersButtonClick;
@@ -15,17 +13,44 @@ ExpWFCFriendsMenu::ExpWFCFriendsMenu() {
 }
 
 void ExpWFCFriendsMenu::OnInit() {
-    this->InitControlGroup(7);
+    // Let the game fully initialise the Friends menu first.  It owns Create
+    // Room visibility, focus order, sounds, and the Back handler.
     WFCFriendsMenu::OnInit();
 
+    // The base page creates six controls.  Rebind those loaded controls into
+    // a seven-slot group before appending Recent Players.
+    this->InitControlGroup(7);
+    this->AddControl(0, this->titleText, 0);
+    this->AddControl(1, this->rosterButton, 0);
+    this->AddControl(2, this->registerButton, 0);
+    this->AddControl(3, this->createRoomButton, 0);
+    this->AddControl(4, this->backButton, 0);
+    this->AddControl(5, this->bottomText, 0);
+
     this->AddControl(6, recentPlayersButton, 0);
-    this->recentPlayersButton.Load(UI::buttonFolder, "Settings1P", "Leaderboard", 1, 0, false);
-    this->recentPlayersButton.buttonId = 6;
+    this->recentPlayersButton.Load(UI::buttonFolder, "WifiFriendMenu", "ButtonRegister", 1, 0, false);
+    this->recentPlayersButton.buttonId = 3;
     Text::Info info;
     info.strings[0] = L"Recent Players";
     this->recentPlayersButton.SetMessage(UI::BMG_TEXT, &info);
     this->recentPlayersButton.SetOnClickHandler(this->onRecentPlayersClick, 0);
     this->recentPlayersButton.SetOnSelectHandler(this->onExtButtonSelect);
+
+    // The stock Friends layout only reserves three full-width slots.  Make
+    // room for a fourth by shifting the complete action stack upward, rather
+    // than drawing over the owner Mii and friend code underneath it.
+    //
+    // These are screen-layout coordinates (not emulator-only pixels), so the
+    // exact same layout is used by the Wii UI renderer.
+    for (u32 layoutIdx = 0; layoutIdx < 4; ++layoutIdx) {
+        // Each stock control has a different authored offset in its BRCTR,
+        // so these values are deliberately not evenly spaced coordinates.
+        // Their rendered centres are a compact, evenly spaced four-row stack.
+        this->createRoomButton.positionAndscale[layoutIdx].position.y = 80.0f;
+        this->rosterButton.positionAndscale[layoutIdx].position.y = 49.0f;
+        this->registerButton.positionAndscale[layoutIdx].position.y = 19.0f;
+        this->recentPlayersButton.positionAndscale[layoutIdx].position.y = -10.0f;
+    }
 }
 
 void ExpWFCFriendsMenu::OnActivate() {
@@ -34,7 +59,7 @@ void ExpWFCFriendsMenu::OnActivate() {
 }
 
 void ExpWFCFriendsMenu::ExtOnButtonSelect(PushButton &button, u32 hudSlotId) {
-    if (button.buttonId == 6) {
+    if (button.buttonId == 3) {
         Text::Info info;
         info.strings[0] = L"View players from recent races.";
         this->bottomText.SetMessage(UI::BMG_TEXT, &info);

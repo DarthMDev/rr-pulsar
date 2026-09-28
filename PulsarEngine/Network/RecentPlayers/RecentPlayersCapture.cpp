@@ -6,7 +6,6 @@
 #include <MarioKartWii/RKNet/RKNetController.hpp>
 #include <MarioKartWii/RKNet/USER.hpp>
 #include <MarioKartWii/RKSYS/RKSYSMgr.hpp>
-#include <MarioKartWii/Scene/RaceScene.hpp>
 #include <MarioKartWii/UI/Section/SectionMgr.hpp>
 #include <MarioKartWii/3D/Camera/CameraMgr.hpp>
 #include <Network/Rating/PlayerRating.hpp>
@@ -56,7 +55,9 @@ void CaptureOnRaceFrame() {
     if (!DriverMgr::isOnlineRace) return;
 
     Raceinfo *raceInfo = Raceinfo::sInstance;
-    if (!raceInfo || raceInfo->stage < RACESTAGE_COUNTDOWN) return;
+    // A countdown is still a lobby-to-race transition.  Only retain opponents
+    // once our local console is actually in the shared race/battle.
+    if (!raceInfo || raceInfo->stage < RACESTAGE_RACE) return;
 
     if (SectionMgr::sInstance != nullptr && SectionMgr::sInstance->curSection != nullptr) {
         SectionId secId = SectionMgr::sInstance->curSection->sectionId;
@@ -110,8 +111,11 @@ void CaptureOnRaceFrame() {
             opp.isBattle = isBattle;
 
             float base = static_cast<float>(isBattle ? packet.br : packet.vr);
-            u8 slot = scenario.players[p].hudSlotId;
-            float dec = (aid < 12 && slot < 2) ? (static_cast<float>(PointRating::remoteDecimalVR[aid][slot]) / 100.0f) : 0.0f;
+            u8 slot = 0;
+            for (int i = 0; i < p; ++i) {
+                if (controller->aidsBelongingToPlayerIds[i] == aid) ++slot;
+            }
+            float dec = (slot < 2) ? (static_cast<float>(PointRating::remoteDecimalVR[aid][slot]) / 100.0f) : 0.0f;
             opp.rating = base + dec;
             opp.timestampTicks = now;
             opp.isValid = true;
@@ -155,38 +159,11 @@ void FlushCapturedOpponents() {
     s_hasCapturedThisRace = false;
 }
 
-typedef void (*SceneOnExitFn)(GameScene *);
-static SceneOnExitFn s_origRaceSceneOnExit = reinterpret_cast<SceneOnExitFn>(0x80554980);
-
-static void RaceSceneOnExitHook(GameScene *scene) {
-    FlushCapturedOpponents();
-    if (s_origRaceSceneOnExit != nullptr) {
-        s_origRaceSceneOnExit(scene);
-    }
-}
-kmWritePointer(0x808b4220 + 0x34, RaceSceneOnExitHook);
-
-typedef void (*SceneDtFn)(RaceScene *, int);
-static SceneDtFn s_origRaceSceneDt = reinterpret_cast<SceneDtFn>(0x80553bd4);
-
-static void RaceSceneDestructorHook(RaceScene *scene, int freeMem) {
-    FlushCapturedOpponents();
-    if (s_origRaceSceneDt != nullptr) {
-        s_origRaceSceneDt(scene, freeMem);
-    }
-}
-kmWritePointer(0x808b4220 + 0x08, RaceSceneDestructorHook);
-
-typedef void (*CreateAndInitInstancesFn)(RaceScene *);
-static CreateAndInitInstancesFn s_origCreateAndInitInstances = reinterpret_cast<CreateAndInitInstancesFn>(0x80554208);
-
-static void RaceSceneCreateAndInitInstancesHook(RaceScene *scene) {
-    ResetCaptureSession();
-    if (s_origCreateAndInitInstances != nullptr) {
-        s_origCreateAndInitInstances(scene);
-    }
-}
-kmWritePointer(0x808b4220 + 0x44, RaceSceneCreateAndInitInstancesHook);
+// These project-wide hooks are deliberately used instead of changing the
+// RaceScene vtable.  The latter runs while core scene state is still being
+// assembled and was the source of the startup crash at 0x80554208.
+static RaceLoadHook ResetRecentPlayersCaptureOnRaceLoad(ResetCaptureSession);
+static SectionLoadHook FlushRecentPlayersCaptureOnSectionLoad(FlushCapturedOpponents);
 
 }  // namespace RecentPlayers
 }  // namespace Pulsar

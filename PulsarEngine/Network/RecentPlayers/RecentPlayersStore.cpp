@@ -39,7 +39,9 @@ static const char *GetStorePath() {
     if (s_storePath[0] == '\0') {
         const System *sys = System::sInstance;
         if (!sys) return nullptr;
-        snprintf(s_storePath, sizeof(s_storePath), "%s/RecentPlayers.pul", sys->GetModFolder());
+        // ISFS permits at most 12 characters in a file name.  Keep this
+        // independent history file portable between Wii and Dolphin.
+        snprintf(s_storePath, sizeof(s_storePath), "%s/RRRecent.pul", sys->GetModFolder());
     }
     return s_storePath;
 }

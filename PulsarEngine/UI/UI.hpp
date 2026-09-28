@@ -51,8 +51,9 @@ enum PulPageId {
     PULPAGE_VEHICLERESTRICTIONWEIGHT,
     PULPAGE_VEHICLERESTRICTION,
     PULPAGE_RECENT_PLAYERS,
+    PULPAGE_SOCIAL,
 
-    PULPAGE_MAX = PULPAGE_RECENT_PLAYERS - PULPAGE_INITIAL + 1
+    PULPAGE_MAX = PULPAGE_SOCIAL - PULPAGE_INITIAL + 1
 };
 
 class ExpSection : public Section {  // u32 id -> either a standard pageId but can also be a PulPageId

@@ -86,7 +86,9 @@ void ExpWFCMain::OnInit() {
     this->AddControl(12, leaderboardButton, 0);
     this->leaderboardButton.Load(UI::buttonFolder, "Settings1P", "Leaderboard", 1, 0, 0);
     this->leaderboardButton.buttonId = 9;
-    this->leaderboardButton.SetMessage(BMG_VR_LEADERBOARD_BUTTON);
+    Text::Info socialLabel;
+    socialLabel.strings[0] = L"Social";
+    this->leaderboardButton.SetMessage(BMG_TEXT, &socialLabel);
     this->leaderboardButton.SetOnClickHandler(this->onLeaderboardClick, 0);
     this->leaderboardButton.SetOnSelectHandler(this->onButtonSelectHandler);
 
@@ -125,7 +127,7 @@ void ExpWFCMain::OnSettingsButtonClick(PushButton &pushButton, u32 r5) {
 }
 
 void ExpWFCMain::OnLeaderboardButtonClick(PushButton &pushButton, u32 hudSlotId) {
-    this->nextPageId = static_cast<PageId>(PULPAGE_VRLEADERBOARD);
+    this->nextPageId = static_cast<PageId>(PULPAGE_SOCIAL);
     this->EndStateAnimated(0, pushButton.GetAnimationFrameSize());
 }
 
@@ -147,7 +149,13 @@ void ExpWFCMain::ExtOnButtonSelect(PushButton &button, u32 hudSlotId) {
     if (button.buttonId != 5) {
         this->OnButtonSelect(button, hudSlotId);
     }
-    this->bottomText.SetMessage(BMG_RANKING_TEXT, 0);
+    if (button.buttonId == 9) {
+        Text::Info info;
+        info.strings[0] = L"Recent players and VR leaderboard.";
+        this->bottomText.SetMessage(BMG_TEXT, &info);
+    } else {
+        this->bottomText.SetMessage(BMG_RANKING_TEXT, 0);
+    }
 }
 
 void ExpWFCMain::BeforeControlUpdate() {

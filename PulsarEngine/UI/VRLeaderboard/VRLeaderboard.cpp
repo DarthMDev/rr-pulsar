@@ -421,12 +421,12 @@ void VRLeaderboardPage::OnUpdate() {
 }
 
 void VRLeaderboardPage::OnBackPress(u32 /*hudSlotId*/) {
-    this->nextPageId = PAGE_WFC_MAIN;
+    this->nextPageId = static_cast<PageId>(PULPAGE_SOCIAL);
     this->EndStateAnimated(1, 0.0f);
 }
 
 void VRLeaderboardPage::OnBackButtonClick(PushButton &button, u32 /*hudSlotId*/) {
-    this->nextPageId = PAGE_WFC_MAIN;
+    this->nextPageId = static_cast<PageId>(PULPAGE_SOCIAL);
     this->EndStateAnimated(1, button.GetAnimationFrameSize());
 }
 

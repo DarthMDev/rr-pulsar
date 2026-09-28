@@ -266,12 +266,12 @@ void RecentPlayersPage::OnUpdate() {
 }
 
 void RecentPlayersPage::OnBackPress(u32 /*hudSlotId*/) {
-    this->nextPageId = PAGE_WFC_FRIENDS_MENU;
+    this->nextPageId = static_cast<PageId>(PULPAGE_SOCIAL);
     this->EndStateAnimated(1, 0.0f);
 }
 
 void RecentPlayersPage::OnBackButtonClick(PushButton &button, u32 /*hudSlotId*/) {
-    this->nextPageId = PAGE_WFC_FRIENDS_MENU;
+    this->nextPageId = static_cast<PageId>(PULPAGE_SOCIAL);
     this->EndStateAnimated(1, button.GetAnimationFrameSize());
 }
 

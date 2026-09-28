@@ -38,8 +38,8 @@
 #include <UI/SelectStage/VariantSelect.hpp>
 #include <UI/TransmissionSelect/TransmissionSelect.hpp>
 #include <UI/VRLeaderboard/VRLeaderboard.hpp>
-#include <UI/RecentPlayers/ExpWFCFriendsMenu.hpp>
 #include <UI/RecentPlayers/RecentPlayersPage.hpp>
+#include <UI/Social/SocialPage.hpp>
 
 namespace Pulsar {
 namespace UI {
@@ -192,6 +192,9 @@ void ExpSection::CreatePulPages() {
     if (isWifiMenuSection && this->GetPulPage<RecentPlayersPage>() == nullptr) {
         this->CreateAndInitPage(*this, RecentPlayersPage::id);
     }
+    if (isWifiMenuSection && this->GetPulPage<SocialPage>() == nullptr) {
+        this->CreateAndInitPage(*this, SocialPage::id);
+    }
 
     const bool canOpenRestrictionSettings = this->Get<ExpFroom>() != nullptr || this->sectionId == SECTION_P1_WIFI || this->sectionId == SECTION_P1_WIFI_FROM_FROOM_RACE || this->sectionId == SECTION_P1_WIFI_FROM_FIND_FRIEND || this->sectionId == SECTION_P2_WIFI || this->sectionId == SECTION_P2_WIFI_FROM_FROOM_RACE;
     if (canOpenRestrictionSettings && this->GetPulPage<SettingsPanel>() != nullptr) {
@@ -227,7 +230,7 @@ void ExpSection::CreateAndInitPage(ExpSection &self, u32 id) {
             page = new ExpWFCModeSel;
             break;
         case PAGE_WFC_FRIENDS_MENU:
-            page = new ExpWFCFriendsMenu;
+            page = new Pages::WFCFriendsMenu;
             break;
         case PAGE_MULTIPLAYER_MENU:
             page = new ExpMultiPlayer;
@@ -330,6 +333,9 @@ void ExpSection::CreateAndInitPage(ExpSection &self, u32 id) {
             break;
         case RecentPlayersPage::id:
             page = new RecentPlayersPage;
+            break;
+        case SocialPage::id:
+            page = new SocialPage;
             break;
         default:
             page = self.CreatePageById(initId);
