@@ -138,6 +138,7 @@ CalcCRC16__3RFLFPvUi = 0x800c78d0
 IsAvailableOfficialData__3RFLFUs = 0x800c7290
 GetStoreData__3RFLFRQ23RFL9StoreDataUiUs = 0x800c7df0
 GetStoreData__3RFLFPQ23RFL9StoreDataUiUs = 0x800c7df0
+CheckValidRaw__3RFLFPCQ23RFL9StoreData = 0x800cb8b0
 
 #Low Level Network
 Patch_LoginPrintHeader = 0x80276054
@@ -1755,6 +1756,17 @@ GetNextPage__Q25Pages13WFCModeSelectCFv = 0x8064d674
 GetRuntimeTypeInfo__Q25Pages13WFCModeSelectCFv = 0x8064d67c
 OnModeButtonSelect__Q25Pages13WFCModeSelectFR10PushButtonUi = 0x8064c75c
 OnModeButtonClick__Q25Pages13WFCModeSelectFR10PushButtonUi = 0x8064c610
+
+#WFCFriendsMenu
+__ct__Q25Pages14WFCFriendsMenuFv = 0x8064c7c8
+__dt__Q25Pages14WFCFriendsMenuFv = 0x8064c9d8
+OnInit__Q25Pages14WFCFriendsMenuFv = 0x8064ca98
+OnActivate__Q25Pages14WFCFriendsMenuFv = 0x8064cf18
+OnDeactivate__Q25Pages14WFCFriendsMenuFv = 0x8064cff8
+OnButtonSelect__Q25Pages14WFCFriendsMenuFR10PushButtonUi = 0x8064d5a0
+GetNextPage__Q25Pages14WFCFriendsMenuCFv = 0x8064d660
+GetRuntimeTypeInfo__Q25Pages14WFCFriendsMenuCFv = 0x8064d668
+__vt__Q25Pages14WFCFriendsMenu = 0x808bfe4c
 
 #WifiAwardResultItem
 FillResult__Q25Pages19WifiAwardResultItemFUcbi = 0x80645820

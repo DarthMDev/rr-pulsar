@@ -38,6 +38,8 @@
 #include <UI/SelectStage/VariantSelect.hpp>
 #include <UI/TransmissionSelect/TransmissionSelect.hpp>
 #include <UI/VRLeaderboard/VRLeaderboard.hpp>
+#include <UI/RecentPlayers/ExpWFCFriendsMenu.hpp>
+#include <UI/RecentPlayers/RecentPlayersPage.hpp>
 
 namespace Pulsar {
 namespace UI {
@@ -184,6 +186,13 @@ void ExpSection::CreatePulPages() {
         this->CreateAndInitPage(*this, TransmissionSelect::id);
     }
 
+    const bool isWifiMenuSection = this->sectionId == SECTION_P1_WIFI || this->sectionId == SECTION_P1_WIFI_FROM_FROOM_RACE ||
+                                   this->sectionId == SECTION_P1_WIFI_FROM_FIND_FRIEND || this->sectionId == SECTION_P2_WIFI ||
+                                   this->sectionId == SECTION_P2_WIFI_FROM_FROOM_RACE;
+    if (isWifiMenuSection && this->GetPulPage<RecentPlayersPage>() == nullptr) {
+        this->CreateAndInitPage(*this, RecentPlayersPage::id);
+    }
+
     const bool canOpenRestrictionSettings = this->Get<ExpFroom>() != nullptr || this->sectionId == SECTION_P1_WIFI || this->sectionId == SECTION_P1_WIFI_FROM_FROOM_RACE || this->sectionId == SECTION_P1_WIFI_FROM_FIND_FRIEND || this->sectionId == SECTION_P2_WIFI || this->sectionId == SECTION_P2_WIFI_FROM_FROOM_RACE;
     if (canOpenRestrictionSettings && this->GetPulPage<SettingsPanel>() != nullptr) {
         if (this->GetPulPage<CharacterRestrictionPage>() == nullptr)
@@ -216,6 +225,9 @@ void ExpSection::CreateAndInitPage(ExpSection &self, u32 id) {
             break;
         case PAGE_WFC_MODE_SELECT:
             page = new ExpWFCModeSel;
+            break;
+        case PAGE_WFC_FRIENDS_MENU:
+            page = new ExpWFCFriendsMenu;
             break;
         case PAGE_MULTIPLAYER_MENU:
             page = new ExpMultiPlayer;
@@ -315,6 +327,9 @@ void ExpSection::CreateAndInitPage(ExpSection &self, u32 id) {
             break;
         case CustomItemPage::id:
             page = new CustomItemPage;
+            break;
+        case RecentPlayersPage::id:
+            page = new RecentPlayersPage;
             break;
         default:
             page = self.CreatePageById(initId);

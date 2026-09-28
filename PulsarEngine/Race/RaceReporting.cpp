@@ -3,6 +3,7 @@
 #include <MarioKartWii/Driver/DriverManager.hpp>
 #include <MarioKartWii/RKNet/RKNetController.hpp>
 #include <Network/GPReport.hpp>
+#include <Network/RecentPlayers/RecentPlayersCapture.hpp>
 
 namespace Pulsar {
 
@@ -12,6 +13,8 @@ void UpdateRaceInstances() {
     RaceScene::UpdateRaceInstances();
     if (!DriverMgr::isOnlineRace)
         return;
+
+    RecentPlayers::CaptureOnRaceFrame();
 
     Raceinfo *raceInfo = Raceinfo::sInstance;
     if (!raceInfo)
