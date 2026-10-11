@@ -137,7 +137,8 @@ public:
 
     static inline u32 GetSettingIndex(SettingId id) {
         for (u32 i = 0; i < SETTING_COUNT; ++i) {
-            if (settingDefs[i].id == id) return i;
+            if (settingDefs[i].id == id)
+                return i;
         }
         return SETTING_COUNT;
     }
@@ -164,8 +165,7 @@ public:
         return contextDefs[context];
     }
 
-    static u32 BuildHostRulePages(SettingsPageId *dest, bool isBattle, bool isKO,
-                                  bool isOTT, bool isRoyale, bool isExtendedTeams);
+    static u32 BuildHostRulePages(SettingsPageId *dest, bool isBattle, bool isKO, bool isOTT, bool isRoyale, bool isExtendedTeams);
 };
 
 }  // namespace Settings
@@ -173,6 +173,11 @@ public:
 enum LooseArchiveOverridesSetting {
     LOOSEARCHIVEOVERRIDES_ENABLED = 0,
     LOOSEARCHIVEOVERRIDES_DISABLED = 1
+};
+
+enum DisplayCustomSkins {
+    DISPLAYCUSTOMSKINS_ENABLED,
+    DISPLAYCUSTOMSKINS_DISABLED
 };
 
 // 1) Race 1 values
@@ -296,11 +301,6 @@ enum MenuSettingStreamerMode {
 enum MatchmakingTimeoutSetting {
     MATCHMAKINGTIMEOUT_DEFAULT = 0x0,
     MATCHMAKINGTIMEOUT_INFINITE = 0x1
-};
-
-enum DisplayCustomSkins {
-    DISPLAYCUSTOMSKINS_ENABLED = 0x0,
-    DISPLAYCUSTOMSKINS_DISABLED = 0x1
 };
 
 // 5) Sound values

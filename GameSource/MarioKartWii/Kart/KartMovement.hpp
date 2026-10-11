@@ -141,7 +141,7 @@ public:
     void ActivateZipperBoost();  // 8057f96c
     void TryStartJumpPad();  // 8057fd18
     void ApplyLightning();  // 80580438
-    void ApplyLightningEffect(int frames, int unk0, int unk1);  // 80580778
+    bool ApplyLightningEffect(int frames, int unk0, int unk1);  // 80580778
     void UpdateScale();  // 8058160c
     void StartBlinkLocal();  // 805819a8
     void ActivateTc();  // 80581a28
@@ -374,7 +374,9 @@ extern float hardSpeedCap;
 extern float bulletSpeed;
 extern float minDriftSpeedRatio;
 extern float regularBoostAccel;
+extern float slipstreamAccel;
 extern float starSpeed;
+extern float slipstreamSpeed;  // Also the mushroom/boost panel minimum speed.
 extern float speedRatioCC[4];  // 0 50cc 1 100cc 2 150 3 battle
 extern float megaTCSpeed;
 extern float unknown_70;

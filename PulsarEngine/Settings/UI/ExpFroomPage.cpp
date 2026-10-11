@@ -33,13 +33,15 @@ void ExpFroom::OnInit() {
 
     this->AddControl(7, kickButton, 0);
     this->kickButton.Load(UI::buttonFolder, "FroomButton", "Kick", 1, 0, false);
+    this->kickButton.SetMessage(BMG_KICK_BUTTON);
     this->kickButton.buttonId = 7;
     this->kickButton.SetOnClickHandler(this->onKickClickHandler, 0);
     this->kickButton.SetOnSelectHandler(this->onButtonSelectHandler);
 }
 
 void ExpFroom::OnResume() {
-    if (this->areControlsHidden) GlobeMgr::sInstance->DisplayMii();
+    if (this->areControlsHidden)
+        GlobeMgr::sInstance->DisplayMii();
     this->areControlsHidden = false;
     FriendRoom::OnResume();
 }
@@ -55,7 +57,7 @@ void ExpFroom::ExtOnButtonSelect(PushButton &button, u32 hudSlotId) {
     } else if (button.buttonId == 6)
         this->bottomText.SetMessage(BMG_TEAMS_BOTTOM, 0);
     else if (button.buttonId == 7)
-        this->bottomText.SetMessage(BMG_KICK_BOTTOM, 0);
+        this->bottomText.SetMessage(BMG_KICK_MESSAGE_BOTTOM, 0);
     else
         this->OnButtonSelect(button, hudSlotId);
 }
@@ -68,13 +70,13 @@ void ExpFroom::OnActivate() {
     ExtendedTeamManager::sInstance->Reset();
 
     RoomKickPage *kickPage = SectionMgr::sInstance->curSection->Get<RoomKickPage>();
-    if (kickPage) kickPage->ClearKickHistory();
+    if (kickPage)
+        kickPage->ClearKickHistory();
 }
 
 void ExpFroom::OnSettingsButtonClick(PushButton &button, u32 hudSlotId) {
     this->areControlsHidden = true;
-    ExpSection::GetSection()->GetPulPage<SettingsPageSelect>()->SetContext(
-        Settings::SETTINGS_CONTEXT_ONLINE, PAGE_NONE);
+    ExpSection::GetSection()->GetPulPage<SettingsPageSelect>()->SetContext(Settings::SETTINGS_CONTEXT_ONLINE, PAGE_NONE);
     ExpSection::GetSection()->GetPulPage<SettingsPanel>()->prevPageId = PAGE_NONE;
     this->AddPageLayer(static_cast<PageId>(this->topSettingsPage), 0);
 }
@@ -123,7 +125,8 @@ void ExpFroom::AfterControlUpdate() {
         const RKNet::Controller *controller = RKNet::Controller::sInstance;
         const RKNet::ControllerSub &sub = controller->subs[controller->currentSub];
         bool teamHidden = true;
-        if (sub.hostAid == sub.localAid && sub.playerCount >= 2) teamHidden = false;
+        if (sub.hostAid == sub.localAid && sub.playerCount >= 2)
+            teamHidden = false;
         this->teamsButton.isHidden = teamHidden;
         this->teamsButton.manipulator.inaccessible = teamHidden;
     }

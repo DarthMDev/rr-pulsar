@@ -24,6 +24,8 @@ public:
     void OnInit() override;
     void BeforeEntranceAnimations() override;
     void BeforeControlUpdate() override;
+    void OnActivate() override;
+    void OnStartPress(u32 hudSlotId) override;
 
     int GetActivePlayerBitfield() const override;
     int GetPlayerBitfield() const override;
@@ -39,7 +41,8 @@ private:
     void OnBackPress(u32 hudSlotId);
     void OnButtonClick(PushButton &button, u32 hudSlotId);
     void OnButtonSelect(PushButton &button, u32 hudSlotId);
-    void OnButtonDeselect(PushButton &button, u32 hudSlotId) {}
+    void OnButtonDeselect(PushButton &button, u32 hudSlotId) {
+    }
     void OnYesNoClick(u32 choice, PushButton &button);
 
     PushButton miis[12];
